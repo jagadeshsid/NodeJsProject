@@ -15,12 +15,10 @@ mongoose.connect('mongodb://mongodb-service:27017/opikaDB', {
   useUnifiedTopology: true,
 });
 
-const User = require('./models/User'); // Import the User model from User.js
+const User = require('./models/User'); 
 
-// Middleware to parse JSON data
 app.use(express.json());
 
-// GET all users
 app.get('/api/users', async (req, res) => {
   try {
     const users = await User.find();
@@ -30,19 +28,17 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
-// POST a new user
-// POST a new user
+
 app.post('/api/users', async (req, res) => {
-  const { email } = req.body; // Extract email from the request body
+  const { email } = req.body; 
 
   try {
-    // Check if a user with the given email already exists
+    // Checking if a user with the given email already exists
     const existingUser = await User.findOne({ email: email });
     if (existingUser) {
       return res.status(400).json({ error: 'User with this email already exists' });
     }
 
-    // If no existing user, proceed to create a new user
     const newUser = new User(req.body);
     const savedUser = await newUser.save();
     res.status(201).json(savedUser);
@@ -52,15 +48,13 @@ app.post('/api/users', async (req, res) => {
 });
 
 
-// GET a user by ID
 app.get('/api/users/:id', async (req, res) => {
   const id = req.params.id;
 
   try {
-    // Check Redis cache first
+    // Checking Redis cache first
     const cacheUser = await redisClient.get(id);
     if (cacheUser) {
-      console.log("redis cache mil gaya");
       return res.json(JSON.parse(cacheUser));
     }
 
@@ -70,8 +64,7 @@ app.get('/api/users/:id', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Store user data in Redis cache
-    await redisClient.set(id, JSON.stringify(user));
+    await redisClient.set(id, JSON.stringify(user)); // adding data to Redis cache
 
     res.json(user);
   } catch (error) {
@@ -80,7 +73,6 @@ app.get('/api/users/:id', async (req, res) => {
 });
 
 
-// PUT (update) a user by ID
 app.put('/api/users/:id', async (req, res) => {
   const id = req.params.id;
   try {
@@ -98,21 +90,23 @@ app.put('/api/users/:id', async (req, res) => {
   }
 });
 
-// DELETE a user by ID
 app.delete('/api/users/:id', async (req, res) => {
   const id = req.params.id;
-  console.log(id);
-
   try {
-      const result = await User.findOneAndDelete({ _id: id });
-      console.log(result);
-      res.json(result);
+    const result = await User.findOneAndDelete({ _id: id });
+    if (!result) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await redisClient.del(id);
+
+    res.json(result);
   } catch (error) {
-    res.status(400).json({ error: `Error deleting user ${error}` });
+    res.status(500).json({ error: `Error deleting user: ${error}` });
   }
 });
 
-// Start the server
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

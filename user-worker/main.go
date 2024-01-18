@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	// MongoDB connection setup
+	// MongoDB connection
 	clientOptions := options.Client().ApplyURI("mongodb://mongodb-service:27017")
 	client, err := mongo.Connect(context.Background(), clientOptions)
 	if err != nil {
@@ -19,26 +19,31 @@ func main() {
 	}
 	defer client.Disconnect(context.Background())
 
-	// Ping the MongoDB server to check the connection
 	err = client.Ping(context.Background(), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Background worker logic
+	go backgroundWorker(client)
+
+	select {}
+}
+
+func backgroundWorker(client *mongo.Client) {
 	for {
-		// Perform summary statistics calculations
-		// For example, count of users in the database
-		collection := client.Database("opikaDB").Collection("users")
-		usersCount, err := collection.CountDocuments(context.Background(), bson.M{})
-		if err != nil {
-			log.Println(err)
-		}
+		go calculateStatistics(client)
 
-		// Log the statistics
-		log.Printf("Total users: %d\n", usersCount)
-
-		// Sleep for a specified duration before the next run
 		time.Sleep(10 * time.Second) // Run every 24 hours
 	}
+}
+
+func calculateStatistics(client *mongo.Client) {
+	collection := client.Database("opikaDB").Collection("users")
+	usersCount, err := collection.CountDocuments(context.Background(), bson.M{})
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	log.Printf("Total users: %d\n", usersCount)
 }
