@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  user-api:
+    build: ./user-api
+    ports:
+      - "3000:3000"
+    links:
+      - mongo
+    depends_on:
+      - mongo
+
+  user-worker:
+    build: ./user-worker
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"

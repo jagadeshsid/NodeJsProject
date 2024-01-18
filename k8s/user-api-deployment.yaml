@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-api
+  template:
+    metadata:
+      labels:
+        app: user-api
+    spec:
+      containers:
+      - name: user-api
+        image: melamsid/user-api:1.1
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"

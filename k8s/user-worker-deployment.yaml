@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-worker
+  template:
+    metadata:
+      labels:
+        app: user-worker
+    spec:
+      containers:
+      - name: user-worker
+        image: melamsid/user-worker:1.1
